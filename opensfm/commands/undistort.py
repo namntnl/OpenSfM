@@ -16,6 +16,7 @@ class Command(command.CommandBase):
             args.reconstruction_index,
             args.tracks,
             args.output,
+            None,
             args.skip_images
         )
 
