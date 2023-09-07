@@ -283,8 +283,10 @@ def root_feature(desc: np.ndarray, l2_normalization: bool = False) -> np.ndarray
     if l2_normalization:
         s2 = np.linalg.norm(desc, axis=1)
         desc = (desc.T / s2).T
+        desc[s2 == 0] = 0
     s = np.sum(desc, 1)
     desc = np.sqrt(desc.T / s).T
+    desc[s==0] = 0
     return desc
 
 
@@ -298,6 +300,7 @@ def root_feature_surf(
         if l2_normalization:
             s2 = np.linalg.norm(desc, axis=1)
             desc = (desc.T / s2).T
+            desc[s2 == 0] = 0
         if partial:
             ii = np.array([i for i in range(64) if (i % 4 == 2 or i % 4 == 3)])
         else:
@@ -307,6 +310,7 @@ def root_feature_surf(
         # s_sub = np.sum(desc_sub, 1)  # This partial normalization gives slightly better results for AKAZE surf
         s_sub = np.sum(np.abs(desc), 1)
         desc_sub = np.sqrt(desc_sub.T / s_sub).T
+        desc_sub[s_sub == 0] = 0
         desc[:, ii] = desc_sub * desc_sub_sign
     return desc
 
