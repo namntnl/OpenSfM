@@ -337,8 +337,15 @@ def normalize_features(
     """Normalize feature coordinates and size."""
     points[:, :2] = normalized_image_coordinates(points[:, :2], width, height)
     points[:, 2:3] /= max(width, height)
-    return points, desc, colors
+    return np.points, desc, colors
 
+def normalize_point_features(
+    points: np.ndarray, width: int, height: int
+) -> np.ndarray:
+    """Normalize feature coordinates and size."""
+    points[:, :2] = normalized_image_coordinates(points[:, :2], width, height)
+    points[:, 2:3] /= max(width, height)
+    return points
 
 def _in_mask(point: np.ndarray, width: int, height: int, mask: np.ndarray) -> bool:
     """Check if a point is inside a binary mask."""
@@ -604,6 +611,8 @@ def extract_features(
         else config["feature_min_frames"]
     )
 
+    features_count = 1
+
     assert len(image.shape) == 3 or len(image.shape) == 2
     image = resized_image(image, extraction_size)
     if len(image.shape) == 2:  # convert (h, w) to (h, w, 1)
@@ -614,36 +623,58 @@ def extract_features(
     else:
         image_gray = image
 
-    keypoints = None
-    feature_type = config["feature_type"].upper()
-    if feature_type == "SIFT":
-        points, desc = extract_features_sift(image_gray, config, features_count)
-    elif feature_type == "SURF":
-        points, desc = extract_features_surf(image_gray, config, features_count)
-    elif feature_type == "AKAZE":
-        points, desc = extract_features_akaze(image_gray, config, features_count)
-    elif feature_type == "HAHOG":
-        points, desc = extract_features_hahog(image_gray, config, features_count)
-    elif feature_type == "ORB":
-        points, desc = extract_features_orb(image_gray, config, features_count)
-    elif feature_type == 'SIFT_GPU':
-        points, desc = extract_features_popsift(image_gray, config, features_count)
-    else:
-        raise ValueError(
-            "Unknown feature type " "(must be SURF, SIFT, AKAZE, HAHOG, SIFT_GPU or ORB)"
-        )
+    all_points = None
+    all_desc = None
+    all_colors = None
 
-    xs = points[:, 0].round().astype(int)
-    ys = points[:, 1].round().astype(int)
-    colors = image[ys, xs]
-    if image.shape[2] == 1:
-        colors = np.repeat(colors, 3).reshape((-1, 3))
+    while True:
+        feature_type = config["feature_type"].upper()
+        if feature_type == "SIFT":
+            points, desc = extract_features_sift(image_gray, config, features_count)
+        elif feature_type == "SURF":
+            points, desc = extract_features_surf(image_gray, config, features_count)
+        elif feature_type == "AKAZE":
+            points, desc = extract_features_akaze(image_gray, config, features_count)
+        elif feature_type == "HAHOG":
+            points, desc = extract_features_hahog(image_gray, config, features_count)
+        elif feature_type == "ORB":
+            points, desc = extract_features_orb(image_gray, config, features_count)
+        elif feature_type == 'SIFT_GPU':
+            points, desc = extract_features_popsift(image_gray, config, features_count)
+        else:
+            raise ValueError(
+                "Unknown feature type " "(must be SURF, SIFT, AKAZE, HAHOG, SIFT_GPU or ORB)"
+            )
 
-    if keypoints is not None:
-        return normalize_features(points, desc, colors,
-                                  image.shape[1], image.shape[0]), keypoints
+        xs = points[:, 0].round().astype(int)
+        ys = points[:, 1].round().astype(int)
+        colors = image[ys, xs]
+        if image.shape[2] == 1:
+            colors = np.repeat(colors, 3).reshape((-1, 3))
+    
+        points = normalize_point_features(points, image.shape[1], image.shape[0])
 
-    return normalize_features(points, desc, colors, image.shape[1], image.shape[0])
+        if all_points is None:
+            all_points = points
+            all_desc = desc
+            all_colors = colors
+        else:
+            all_points = np.append(all_points, points, axis=0)
+            all_desc = np.append(all_desc, desc, axis=0)
+            all_colors = np.append(all_colors, colors, axis=0)
+
+        if image.shape[1] <= 640:
+            break
+        
+        else:
+            extraction_size = extraction_size // 2
+            image = resized_image(image, extraction_size)
+            if image.shape[2] == 3:
+                image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            else:
+                image_gray = image
+
+    return (all_points, all_desc, all_colors)
 
 
 def build_flann_index(descriptors: np.ndarray, config: Dict[str, Any]) -> Any:
