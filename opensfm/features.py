@@ -612,8 +612,6 @@ def extract_features(
         else config["feature_min_frames"]
     )
 
-    features_count = 1
-
     assert len(image.shape) == 3 or len(image.shape) == 2
     image = resized_image(image, extraction_size)
     if len(image.shape) == 2:  # convert (h, w) to (h, w, 1)
