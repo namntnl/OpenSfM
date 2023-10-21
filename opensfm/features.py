@@ -401,6 +401,7 @@ def extract_features_sift(
             detector.setDouble("contrastThreshold", sift_peak_threshold)
         points = detector.detect(image)
         logger.debug("Found {0} points in {1}s".format(len(points), time.time() - t))
+        break # TODO REMOVE!
         if len(points) < features_count and sift_peak_threshold > 0.0001:
             sift_peak_threshold = (sift_peak_threshold * 2) / 3
             logger.debug("reducing threshold")
