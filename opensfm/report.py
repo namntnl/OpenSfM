@@ -217,7 +217,7 @@ class Report:
             geo_string.append("GPS")
         if self._has_meaningful_gcp():
             geo_string.append("GCP")
-        
+
         if "align" in self.stats:
             geo_string = ["Alignment"]
 
@@ -247,6 +247,7 @@ class Report:
                 f"{self.stats['features_statistics']['reconstructed_features']['median']:,} features",
             ],
             ["Geographic Reference", " and ".join(geo_string)],
+            ["TEST Log GCP", "This is data TEST"],
         ]
 
         # Dense (if available)
@@ -263,10 +264,10 @@ class Report:
                 "Average Ground Sampling Distance (GSD)",
                 f"{self.stats['odm_processing_statistics']['average_gsd']:.1f} cm"
             ])
-        
+
         row_gps_gcp = [" / ".join(geo_string) + " errors"]
         geo_errors = []
-        
+
         if not "align" in self.stats:
             if self.stats["reconstruction_statistics"]["has_gps"]:
                 geo_errors.append(f"{self.stats['gps_errors']['average_error']:.2f}")
@@ -274,31 +275,14 @@ class Report:
                 geo_errors.append(f"{self.stats['gcp_errors']['average_error']:.2f}")
         else:
             geo_errors.append(f"{(self.stats['align']['coarse']['rmse_3d'] + self.stats['align']['fine']['rmse_3d']):.2f}")
-        
+
         if len(geo_errors) > 0:
             row_gps_gcp.append(" / ".join(geo_errors) + " meters")
             rows.append(row_gps_gcp)
-        logging.info("-----------NAMNAMNAM-----------")
-        logging.info("====================================")
-        logging.info("====================================")
-        logging.info(f"GCP LOGGING row_gps_gcp: {row_gps_gcp}")
-        for index, value in enumerate(row_gps_gcp):
-            logging.info(f"GCP LOGGING index: {index}")
-            logging.info(f"INDEX: {index}")
-            logging.info(f"VALUE: {value}")
-        logging.info("====================================")
-        logging.info("====================================")
-
-        logging.info("====================================")
-        logging.info("====================================")
-        logging.info(f"GCP LOGGING rows: {rows}")
-        for index, value in enumerate(rows):
-            for index2, value2 in enumerate(value):
-                logging.info(f"GCP LOGGING index2: {index}")
-                logging.info(f"INDEX: {index2}")
-                logging.info(f"VALUE: {value2}")
-        logging.info("====================================")
-        logging.info("====================================")
+        logger.info("-----------------NAMNAMNAM-----------------")
+        logger.info("===========================================")
+        logger.info(' '.join((str(n) for n in row_gps_gcp)))
+        logger.info("===========================================")
 
         self._make_table(None, rows, True)
         self.pdf.set_xy(self.margin, self.pdf.get_y() + self.margin / 2)
