@@ -278,6 +278,27 @@ class Report:
         if len(geo_errors) > 0:
             row_gps_gcp.append(" / ".join(geo_errors) + " meters")
             rows.append(row_gps_gcp)
+        logging.info("-----------NAMNAMNAM-----------")
+        logging.info("====================================")
+        logging.info("====================================")
+        logging.info(f"GCP LOGGING row_gps_gcp: {row_gps_gcp}")
+        for index, value in enumerate(row_gps_gcp):
+            logging.info(f"GCP LOGGING index: {index}")
+            logging.info(f"INDEX: {index}")
+            logging.info(f"VALUE: {value}")
+        logging.info("====================================")
+        logging.info("====================================")
+
+        logging.info("====================================")
+        logging.info("====================================")
+        logging.info(f"GCP LOGGING rows: {rows}")
+        for index, value in enumerate(rows):
+            for index2, value2 in enumerate(value):
+                logging.info(f"GCP LOGGING index2: {index}")
+                logging.info(f"INDEX: {index2}")
+                logging.info(f"VALUE: {value2}")
+        logging.info("====================================")
+        logging.info("====================================")
 
         self._make_table(None, rows, True)
         self.pdf.set_xy(self.margin, self.pdf.get_y() + self.margin / 2)
